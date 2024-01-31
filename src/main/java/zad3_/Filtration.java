@@ -6,13 +6,14 @@ import akka.actor.Props;
 
 import java.util.Random;
 
-public class Filtration extends AbstractActor {
-    static public Props props(int slots, int timeScale) {
+public class Filtration extends AbstractActor
+{
+    static public Props props(int slots, int timeScale)
+    {
         return Props.create(Filtration.class, () -> new Filtration(slots, timeScale));
     }
 
     static public class StartFiltration {}
-
     private int availableSlots;
     private final int timeScale;
     private final Random random = new Random();
@@ -38,18 +39,14 @@ public class Filtration extends AbstractActor {
                 .build();
     }
 
-    private void productNotAvailable(Warehouse.ProductNotAvailable productNotAvailable)
-    {
-        ActorSelection fermentation = getContext().getSystem().actorSelection("/user/fermentation");
-        fermentation.tell(new Fermentation.CheckStatus(), getSelf());
-    }
 
+    /* ------------- START FILTRATION ------------- */
     private void startFiltration(StartFiltration command)
     {
         if (!isFinished)
         {
-            System.out.println("START FILTRATION");
-            if (availableSlots > 0) {
+            if (availableSlots > 0)
+            {
                 getContext().getSystem().actorSelection("/user/warehouse").tell(new Warehouse.TakeProduct("wine", 25), getSelf());
                 availableSlots--;
             } else {
@@ -58,6 +55,8 @@ public class Filtration extends AbstractActor {
         }
     }
 
+
+    /* ------------- TAKE PRODUCT ------------- */
     public void productTaken(Warehouse.ProductTaken command)
     {
         if (command.name.equals("wine"))
@@ -71,7 +70,6 @@ public class Filtration extends AbstractActor {
                             getContext().getSystem().actorSelection("/user/warehouse")
                                     .tell(new Warehouse.AddProduct("filtered wine", 24), getSelf());
 
-                            System.out.println("KURWA MOWIE TEMU JEBANEMU BOTTLEINGU ZE MOZE ZACZAC");
                             getContext().getSystem().actorSelection("/user/bottling")
                                     .tell(new Bottling.StartBottling(), getSelf());
 
@@ -82,7 +80,8 @@ public class Filtration extends AbstractActor {
                 );
             }
 
-            else {
+            else
+            {
                 System.out.println("Filtration failed for " + command.quantity + " of " + command.name);
                 availableSlots++;
                 self().tell(new StartFiltration(), self());
@@ -90,26 +89,36 @@ public class Filtration extends AbstractActor {
         }
     }
 
+
+    /* ------------- PRODUCT ADDED ------------- */
     private void productAdded(Warehouse.ProductAdded command)
     {
         System.out.println("Filtration: " + command + " added");
     }
 
 
+    /* ------------- PRODUCT NOT AVAILABLE ------------- */
+    private void productNotAvailable(Warehouse.ProductNotAvailable productNotAvailable)
+    {
+        System.out.println("Filtration: " + productNotAvailable + " not available");
+        ActorSelection fermentation = getContext().getSystem().actorSelection("/user/fermentation");
+        fermentation.tell(new Fermentation.CheckStatus(), getSelf());
+    }
+
+
+    /* ------------- OTHER ------------- */
     private void handlePreviousActorStatus(Fermentation.StatusResponse statusResponse)
     {
         if (statusResponse.isFinished())
         {
             isFinished = true;
-            System.out.println("----------- FILTRATION STOPPED ----------");
-            getContext().stop(getSelf());
+            // getContext().stop(getSelf());
         }
     }
 
     static public class CheckStatus {}
 
-    public record StatusResponse(boolean isFinished) {
-    }
+    public record StatusResponse(boolean isFinished) {}
 
     private void checkStatus(Fermentation.CheckStatus command)
     {

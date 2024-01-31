@@ -46,18 +46,18 @@ public class Warehouse extends AbstractActor
         int quantityBefore = inventory.getOrDefault(command.name, 0);
         // System.out.println("Warehouse: " + command.name + " available before taking: " + quantityBefore);
 
-        if (quantityBefore >= command.quantity) {
+        if (quantityBefore >= command.quantity)
+        {
             inventory.put(command.name, quantityBefore - command.quantity);
-            // System.out.println("Warehouse: " + command.name + " taken: " + command.quantity);
+            System.out.println("Warehouse: " + command.name + " taken: " + command.quantity);
             getSender().tell(new ProductTaken(command.name, command.quantity), getSelf());
-        } else {
-            System.out.println("Warehouse: Not enough " + command.name + " available.");
-            System.out.println("=========" + quantityBefore + " < " + command.quantity + "=========");
-            getSender().tell(new ProductNotAvailable(command.name, command.quantity), getSelf());
         }
 
-        int quantityAfter = inventory.getOrDefault(command.name, 0);
-        // System.out.println("Warehouse: " + command.name + " available after taking: " + quantityAfter);
+        else
+        {
+            System.out.println("Warehouse: Not enough " + command.name + " available.");
+            getSender().tell(new ProductNotAvailable(command.name, command.quantity), getSelf());
+        }
     }
 
 

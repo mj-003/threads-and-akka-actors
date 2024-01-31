@@ -2,7 +2,8 @@ package zad2;
 
 import java.util.Random;
 
-class Client extends Thread {
+class Client extends Thread
+{
         private static int nextId = 1;
         private final int clientId;
         private final Bank bank;

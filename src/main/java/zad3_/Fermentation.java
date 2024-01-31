@@ -48,7 +48,6 @@ public class Fermentation extends AbstractActor
     {
         if (!isFinished) {
             if (availableSlots > 0) {
-                System.out.println("START FERMENTATION");
                 getContext().getSystem().actorSelection("/user/warehouse")
                         .tell(new Warehouse.TakeProduct("grape juice", 5), getSelf());
                 getContext().getSystem().actorSelection("/user/warehouse")
@@ -96,7 +95,6 @@ public class Fermentation extends AbstractActor
                 java.time.Duration.ofHours(14 / timeScale),
                 () -> {
                     addWineToWarehouse();
-                    //startFermentation();
                     getContext().getSystem().actorSelection("/user/filtration").tell(new Filtration.StartFiltration(), getSelf());
                     availableSlots++;
                     startFermentation();
@@ -142,32 +140,24 @@ public class Fermentation extends AbstractActor
     /* ------------- PRODUCT NOT AVAILABLE ------------- */
     private void productNotAvailable(Warehouse.ProductNotAvailable productNotAvailable)
     {
+        System.out.println("Fermentation: " + productNotAvailable + " not available");
         ActorSelection pressing = getContext().getSystem().actorSelection("/user/pressing");
         pressing.tell(new Pressing.CheckStatus(), getSelf());
     }
 
+
+    /* ------------- OTHER ------------- */
     private void handlePreviousActorStatus(Pressing.StatusResponse statusResponse)
     {
         if (statusResponse.isFinished()) {
             isFinished = true;
-            System.out.println("----------- FERMENTATION STOPPED ----------");
-            getContext().stop(getSelf());
+            // getContext().stop(getSelf());
         }
     }
 
     static public class CheckStatus {}
-    static public class StatusResponse {
-        private final boolean isFinished;
 
-        public StatusResponse(boolean isFinished) {
-            this.isFinished = isFinished;
-        }
-
-        public boolean isFinished() {
-            return isFinished;
-        }
-    }
-
+    public record StatusResponse(boolean isFinished) {}
     private void checkStatus(Pressing.CheckStatus command)
     {
         getSender().tell(new Pressing.StatusResponse(isFinished), getSelf());

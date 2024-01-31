@@ -1,7 +1,8 @@
 package zad2;
 
 import java.util.ArrayList;
-class Bank {
+class Bank
+{
     final ArrayList<Account> accounts;
 
     public Bank(int numAccounts)

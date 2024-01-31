@@ -13,7 +13,6 @@ public class Pressing extends AbstractActor
     }
 
     static public class StartProcessing {}
-
     private int availableSlots;
     private final int timeScale;
     private final Random random = new Random();
@@ -38,22 +37,26 @@ public class Pressing extends AbstractActor
                 .build();
     }
 
+
+    /* ------------- START PROCESSING ------------- */
     private void startProcessing(StartProcessing command)
     {
-        if (!isFinished) {
+        if (!isFinished)
+        {
             if (availableSlots > 0)
             {
-                System.out.println("START PRESSING");
                 getContext().getSystem().actorSelection("/user/warehouse")
                         .tell(new Warehouse.TakeProduct("grapes", 15), getSelf());
                 availableSlots--;
             } else {
-                System.out.println("PRESSING NO SLOTS");
+                System.out.println("Pressing: no available slots");
                 startProcessing();
             }
         }
     }
 
+
+    /* ------------- TAKE PRODUCT ------------- */
     private void productTaken(Warehouse.ProductTaken command)
     {
         if (command.name.equals("grapes")) {
@@ -85,24 +88,35 @@ public class Pressing extends AbstractActor
     {
         Warehouse.AddProduct grapeJuice = new Warehouse.AddProduct("grape juice", 10);
         getContext().getSystem().actorSelection("/user/warehouse").tell(grapeJuice, getSelf());
-        // System.out.println("Pressing: grape juice added");
     }
 
     private void startProcessing()
     {
         self().tell(new StartProcessing(), self());
-        // System.out.println("Pressing: start processing");
     }
 
     private void startFermentation()
     {
         getContext().getSystem().actorSelection("/user/fermentation").tell(new Fermentation.StartFermentation(), getSelf());
     }
+
+
+    /* ------------- PRODUCT ADDED ------------- */
+    private void productAdded(Warehouse.ProductAdded command)
+    {
+        System.out.println("Pressing: " + command + " added");
+    }
+
+
+    /* ------------- PRODUCT NOT AVAILABLE ------------- */
     private void productNotAvailable(Warehouse.ProductNotAvailable command)
     {
-        isFinished = true;
-        System.out.println("---------- PRESSING STOPPED ----------");
+        System.out.println("Pressing: " + command + " not available");
+        // isFinished = true;
     }
+
+
+    /* ------------- OTHER ------------- */
     private void handlePressingFailure(Warehouse.ProductTaken command)
     {
         System.out.println("Pressing failed for " + command.quantity + " of " + command.name);
@@ -110,16 +124,8 @@ public class Pressing extends AbstractActor
         startProcessing();
     }
 
-    private void productAdded(Warehouse.ProductAdded command)
-    {
-        System.out.println("Pressing: " + command + " added");
-    }
-
     static public class CheckStatus {}
-
-    public record StatusResponse(boolean isFinished) {
-    }
-
+    public record StatusResponse(boolean isFinished) {}
     private void checkStatus(CheckStatus command)
     {
         getSender().tell(new StatusResponse(isFinished), getSelf());

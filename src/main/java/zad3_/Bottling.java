@@ -38,6 +38,8 @@ public class Bottling extends AbstractActor
                 .build();
     }
 
+
+    /* ------------- START BOTTLING ------------- */
     private void startBottling(StartBottling command)
     {
         if (!isFinished) {
@@ -50,16 +52,15 @@ public class Bottling extends AbstractActor
         }
     }
 
+
+    /* ------------- TAKE PRODUCT ------------- */
     private void productTaken(Warehouse.ProductTaken command)
     {
-        System.out.println("Bottling: " + command.name + " taken");
-
         if (command.name.equals("filtered wine"))
         {
             boolean isSuccess = random.nextDouble() >= failureProbability;
             if (isSuccess)
             {
-                System.out.println("Bottling process succeeded for " + command.quantity + " of " + command.name);
                 getContext().getSystem().scheduler().scheduleOnce(
                         java.time.Duration.ofMinutes(5 / timeScale),
                         () -> {
@@ -83,22 +84,28 @@ public class Bottling extends AbstractActor
     }
 
 
+    /* ------------- PRODUCT ADDED ------------- */
     private void productAdded(Warehouse.ProductAdded command)
     {
         System.out.println("Bottling: " + command + " added");
     }
+
+
+    /* ------------- PRODUCT NOT AVAILABLE ------------- */
     private void productNotAvailable(Warehouse.ProductNotAvailable productNotAvailable)
     {
+        System.out.println("Bottling: " + productNotAvailable + " not available");
         ActorSelection pressing = getContext().getSystem().actorSelection("/user/pressing");
         pressing.tell(new Pressing.CheckStatus(), getSelf());
     }
 
+
+    /* ------------- OTHER ------------- */
     private void handlePreviousActorStatus(Filtration.StatusResponse statusResponse)
     {
         if (statusResponse.isFinished()) {
             isFinished = true;
-            System.out.println("----------- BOTTLING STOPPED ----------");
-            getContext().stop(getSelf());
+            // getContext().stop(getSelf());
         }
     }
 
